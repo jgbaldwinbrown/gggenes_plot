@@ -56,7 +56,22 @@ get_transcripts = function(gff, genes) {
 	transcripts$subend = transcripts$end
 	transcripts$start = sapply(transcripts$gene, function(x){get_transcript_gene(x, genes)$start})
 	transcripts$end = sapply(transcripts$gene, function(x){get_transcript_gene(x, genes)$end})
+	transcripts$transcript = attribute(transcripts$attributes, "ID")
 	return(transcripts)
+}
+
+get_exon_transcript = function(transcript_name, transcripts) {
+	return(transcripts[transcripts["transcript"] == transcript_name,][1,])
+}
+
+get_exons = function(gff, genes, transcripts) {
+	exons = gff[gff["feature"] == "exon",]
+	exons$transcript = attribute(exons$attributes, "Parent")
+	exons$substart = exons$start
+	exons$subend = exons$end
+	exons.start = sapply(exons$transcript, function(x){get_exon_transcript(x, transcripts)$start})
+	exons.end = sapply(exons$transcript, function(x){get_exon_transcript(x, transcripts)$end})
+	return(exons)
 }
 
 orientone = function(strandstr) {
@@ -74,9 +89,13 @@ read_gff = function(path) {
 	raw = as.data.frame(fread(path))
 	colnames(raw) = c("chrom", "source", "feature", "start", "end", "score", "strand", "frame", "attributes")
 	raw$orientation = orient(raw$strand)
+
 	genes = get_genes(raw)
 	transcripts = get_transcripts(raw, genes)
-	data = bind_rows(genes, transcripts)
+	exons = get_exons(raw, genes, transcripts)
+	data = bind_rows(genes, transcripts, exons)
+	# data = exons
+
 	data = data[,c("chrom", "feature", "start", "end", "substart", "subend", "orientation", "gene")]
 	data$type = "genes"
 	data$graph = "genes"
@@ -135,9 +154,10 @@ main = function() {
 	outpath = args[5]
 
 	fulldata = bind_rows(data, vars, features)
+	write.table(fulldata, "fulldata.txt")
 	p = ggplot_full(fulldata, chrom, start, end)
 
-	pdf(outpath, width = 4, height = 3)
+	pdf(outpath, width = 40, height = 30)
 		print(p)
 	dev.off()
 }

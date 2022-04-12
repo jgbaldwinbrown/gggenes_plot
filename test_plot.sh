@@ -6,7 +6,7 @@ if [ ! -f setup.done ] ; then
 	touch setup.done
 fi
 
-Rscript plot_region3.R \
+Rscript plot_region.R \
 	louse_annotation_0.1.1_chr1.gff.gz \
 	data.bed \
 	snps.bed \
