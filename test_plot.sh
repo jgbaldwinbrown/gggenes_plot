@@ -11,4 +11,5 @@ Rscript plot_region.R \
 	data.bed \
 	snps.bed \
 	"chr1:1000000:1200000" \
-	potato.pdf
+	potato.pdf \
+	8:3
